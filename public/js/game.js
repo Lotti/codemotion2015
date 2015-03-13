@@ -119,19 +119,18 @@ var SynchState = {
     players: 0,
     countdown: false,
     preload: function() {
-        this.ball.body.velocity.setTo(0,0);
-        var style = {font: "50px Arial", fill: "#ffffff", align: "center"};
+        var style = {font: "40px Arial", fill: "#ffffff", align: "center"};
         this.text = game.add.text(game.world.centerX, game.world.centerY, "Awaiting other players ("+this.players+")", style);
-        text.anchor.setTo(0.5,0.5);
+        this.text.anchor.setTo(0.5,0.5);
     },
     create: function() {
     },
     update: function () {
-        if (countdown) {
-            text.text = "Starting in ";
+        if (this.countdown) {
+            this.text.text = "Starting in ";
         }
         else {
-            text.text = "Awaiting other players (" + this.players + ")";
+            this.text.text = "Awaiting other players (" + this.players + ")";
         }
     }
 };
