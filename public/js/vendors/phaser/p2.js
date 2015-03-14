@@ -2580,7 +2580,7 @@ Scalar.eq = function(a,b,precision){
 };
 
 },{"__browserify_Buffer":1,"__browserify_process":2}],7:[function(require,module,exports){
-var process=require("__browserify_process"),global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},Buffer=require("__browserify_Buffer"),__filename="/..\\node_modules\\poly-decomp\\src\\index.js",__dirname="/..\\node_modules\\poly-decomp\\src";module.exports = {
+var process=require("__browserify_process"),global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},Buffer=require("__browserify_Buffer"),__filename="/..\\node_modules\\poly-decomp\\src\\routes.js",__dirname="/..\\node_modules\\poly-decomp\\src";module.exports = {
     Polygon : require("./Polygon"),
     Point : require("./Point"),
 };

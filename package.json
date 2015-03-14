@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon ./bin/www"
+    "start": "nodemon ./server/main"
   },
   "dependencies": {
+    "compression": "~1.4.2",
     "body-parser": "~1.10.2",
     "cookie-parser": "~1.3.3",
     "debug": "~2.1.1",

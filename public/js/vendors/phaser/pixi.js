@@ -293,7 +293,7 @@ PIXI.Polygon.prototype.contains = function(x, y)
     var inside = false;
 
     // use some raycasting to test hits
-    // https://github.com/substack/point-in-polygon/blob/master/index.js
+    // https://github.com/substack/point-in-polygon/blob/master/routes.js
     var length = this.points.length / 2;
 
     for(var i = 0, j = length - 1; i < length; j = i++)

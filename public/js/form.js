@@ -26,4 +26,6 @@ $(function() {
             window.location.reload(true);
         }
     });
+
+    var socket = io();
 });
