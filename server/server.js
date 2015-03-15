@@ -22,8 +22,8 @@ function server(io) {
         }
     }
 
-    function socketsInRoom (room) {
-        return Object.keys(io.nsps["/"].adapter.rooms[room]).length;
+    function socketsInRoom(room) {
+        return Object.keys(io.nsps["/"].adapter.rooms[room]);
     }
 
     function sendError(number, msg, socket, room) {
@@ -69,9 +69,9 @@ function server(io) {
                             if (!err) {
                                 socket.join(room);
                                 var players = socketsInRoom(room);
-                                ack({ rooms: socket.rooms, playersCount: players });
+                                ack({ rooms: socket.rooms, players: players, playersCount: players.length });
                                 log('client '+socket.id+' connected to host '+room+' ('+players+')');
-                                io.to(room).emit('joined', { playersCount: players });
+                                io.to(room).emit('joined', { players: players, playersCount: players.length });
                             }
                             else {
                                 log(err,'e');
@@ -97,12 +97,15 @@ function server(io) {
                 hosts[room] = undefined;
                 delete hosts[room];
                 log('room destroyed');
-                io.to(room).emit('disconnect'); //host leaved!!
+                sendError(6, "host left the game", socket, room);
             }
             else {
-                io.to(room).emit('disconnect'); //player leaved!!
+                var players = socketsInRoom(room);
+                io.to(room).emit('left', { playerLeft: socket.id, players: players, playersCount: players.length });
             }
         });
+
+        //TODO: countdown inizio partita
     });
 }
 

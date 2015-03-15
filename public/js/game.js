@@ -1,6 +1,11 @@
 function Pong() {
     var self = this;
     var socket = io();
+    socket.on('error', function(data) {
+        console.error("[Error:"+data.num+"] "+data.msg);
+        window.alert("Error "+data.num+"\n"+data.msg);
+        window.location.reload(true);
+    });
 
     var debug = true;
 
@@ -121,6 +126,7 @@ function Pong() {
         }
     };
 
+    //TODO: gestione countdown
     var SynchState = {
         players: 0,
         countdown: false,
@@ -166,6 +172,10 @@ function Pong() {
         }
     };
 
+    //TODO: gestire utente disconnesso
+    //TODO: riscrivere gamestate per sfruttare sprite già presenti sulla scena
+    //TODO: trasferimento dati
+    //TODO: endgame?
     var GameState = {
         preload: function () {
             this.cursors = game.input.keyboard.createCursorKeys();
