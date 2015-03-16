@@ -19,21 +19,29 @@ $(function() {
             if ($("#playersCount").length > 0) {
                 $("#playersCount").text(data.playersCount);
             }
+            if (data.playersCount == 4) {
+                $("#connect").addClass("hide");
+                pong.sync({ hosting: true, playersCount: data.playersCount });
+            }
+        });
+        socket.on('playerLeft', function (data) {
+            data.playersCount = parseInt(data.playersCount);
 
+            if ($("#playersCount").length > 0) {
+                $("#playersCount").text(data.playersCount);
+            }
             if (data.playersCount == 4) {
                 $("#connect").addClass("hide");
                 pong.sync({ hosting: true, playersCount: data.playersCount });
             }
         });
         socket.emit('host', '', function(data) {
-            socket.rooms = data.rooms;
-
             new QRCode(document.getElementById("qrcode"),
                 {
-                    text: window.location.href+"#"+socket.id,
+                    text: window.location.href+"#"+data,
                     width: 245, height: 245
                 });
-            $("#gameId").text(socket.id);
+            $("#gameId").text(data);
         });
     });
 
@@ -51,7 +59,6 @@ $(function() {
         $("#connect").addClass("hide");
 
         socket.emit('join', $("#inputGameId").val(), function(data) {
-            socket.rooms = data.rooms;
             pong.sync({ hosting: false, playersCount: parseInt(data.playersCount) });
         });
     });

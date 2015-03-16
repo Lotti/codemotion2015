@@ -1,7 +1,18 @@
 function Pong() {
     var self = this;
     var socket = io();
+    socket.on('disconnect', function(data) {
+        var msg = 'Server went offline. Try again in few minutes!';
+        console.error(msg+"\n"+data);
+        window.alert(msg+"\n"+data);
+        window.location.reload(true);
+    });
     socket.on('error', function(data) {
+        console.error(data);
+        window.alert(data);
+        window.location.reload(true);
+    });
+    socket.on('errorMsg', function(data) {
         console.error("[Error:"+data.num+"] "+data.msg);
         window.alert("Error "+data.num+"\n"+data.msg);
         window.location.reload(true);
@@ -131,22 +142,24 @@ function Pong() {
         players: 0,
         countdown: false,
         init: function (data) {
-            console.log(data);
-            this.players = data.playersCount;
+            var self = this;
+            self.players = parseInt(data.playersCount);
             if (data.hosting) {
                 host = true;
                 socket.removeAllListeners('joined');
             }
             else {
-                if (this.players < 4) {
-                    socket.on('joined', function (data) {
-                        this.players = parseInt(data.playersCount);
-                        if (this.players == 4) {
-                            socket.removeAllListeners("joined");
-                        }
-                    });
-                }
+                socket.on('joined', function (data) {
+                    self.players = parseInt(data.playersCount);
+                });
+                socket.on('playerLeft', function (data) {
+                    self.players = parseInt(data.playersCount);
+                });
             }
+            socket.on('timeOut', function(data, ack) {
+                self.countdown = data;
+                ack(true);
+            });
         },
         create: function () {
             var style = {font: "30px Arial", fill: "#ffffff", align: "center"};
