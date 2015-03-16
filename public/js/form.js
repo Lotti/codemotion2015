@@ -13,11 +13,13 @@ $(function() {
         $("#buttonsContainer").addClass("hide");
         $("#qrcodeContainer").removeClass("hide");
 
+        var $playersCount= $("#playersCount");
+
         socket.on('joined', function(data) {
             data.playersCount = parseInt(data.playersCount);
 
-            if ($("#playersCount").length > 0) {
-                $("#playersCount").text(data.playersCount);
+            if ($playersCount.length > 0) {
+                $playersCount.text(data.playersCount);
             }
             if (data.playersCount == 4) {
                 $("#connect").addClass("hide");
@@ -27,8 +29,8 @@ $(function() {
         socket.on('playerLeft', function (data) {
             data.playersCount = parseInt(data.playersCount);
 
-            if ($("#playersCount").length > 0) {
-                $("#playersCount").text(data.playersCount);
+            if ($playersCount.length > 0) {
+                $playersCount.text(data.playersCount);
             }
             if (data.playersCount == 4) {
                 $("#connect").addClass("hide");

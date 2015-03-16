@@ -1,7 +1,6 @@
 function server(io) {
     var debug = true;
 
-    var games = {};
     var clients = {};
     var hosts = {};
 
@@ -31,6 +30,10 @@ function server(io) {
 
     function roomExists(room) {
         return io.nsps["/"].adapter.rooms[room] != undefined;
+    }
+
+    function getSocket(id) {
+        return io.sockets.connected[id];
     }
 
     function getRoom(room) {
@@ -69,24 +72,37 @@ function server(io) {
         }
     }
 
-    function startTimeOut(room, times) {
+    function startTimeOut(room, playerCounter, times) {
+        if (playerCounter == undefined) {
+            playerCounter = 0;
+        }
+
         if (times == undefined) {
             times = 0;
         }
 
         var players = socketsInRoom(room);
 
-        var ticks = 0;
-        for(var i in players) {
-            var p = players[i];
-            setTimeout(function () {
-                io.to(p).emit('timeOut', times, function () {
-                    ticks++;
-                    if (ticks == 4) {
-                        startTimeOut(room, ++times);
-                    }
+        if (times > 3) {
+            return;
+        }
+        else if (playerCounter >= 4) {
+            startTimeOut(room, 0, ++times);
+        }
+        else {
+            var sid = players[playerCounter];
+            var socket = io.sockets.connected[players[playerCounter]];
+            //var socket = getSocket(sid);
+            if (socket != undefined) {
+                log('ticking... '+times+ sid);
+                socket.emit('timeOut', {times: times}, function (socketId) {
+                    log('ticking back... '+times+ socketId);
+                    startTimeOut(room, ++playerCounter, times);
                 });
-            }, 1000);
+            }
+            else {
+                log('socket not found :\\ '+sid,'e');
+            }
         }
     }
 
@@ -100,27 +116,16 @@ function server(io) {
         socket.on('host', function(data, ack) {
             var room = makeGameId();
             if (debug) room = 1;
-            socket.leave(socket.id, function(err) {
+            socket.join(room, function (err) {
                 if (!err) {
-                    clients[socket.id] = null;
-                    socket.join(room, function (err) {
-                        if (!err) {
-                            games[room] = [];
-                            games[room].push(socket.id);
-                            clients[socket.id] = room;
-                            hosts[socket.id] = true;
-                            ack(room);
-                            log('host '+socket.id+' connected');
-                        }
-                        else {
-                            log(err,'e');
-                            sendError(3, "host: can't join room", socket);
-                        }
-                    });
+                    clients[socket.id] = room;
+                    hosts[socket.id] = true;
+                    ack(room);
+                    log('host '+socket.id+' connected');
                 }
                 else {
                     log(err,'e');
-                    sendError(2, "host: can't leave default room", socket);
+                    sendError(1, "host: can't join room", socket);
                 }
             });
         });
@@ -131,49 +136,56 @@ function server(io) {
             if (roomExists(room)) {
                 var c = socketsInRoom(room).length;
                 if (c < 1) {
-                    sendError(7, "that room doesn't exists", socket, room);
+                    sendError(4, "that room doesn't exists", socket, room);
                 }
                 else if (c >= 4) {
-                    sendError(8, "the room is full!", socket, room);
+                    sendError(5, "the room is full!", socket, room);
                 }
                 else {
-                    socket.leave(socket.rooms[0], function (err) {
+                    socket.join(room, function (err) {
                         if (!err) {
-                            clients[socket.id] = null;
-                            socket.join(room, function (err) {
-                                if (!err) {
-                                    clients[socket.id] = room;
-                                    var players = socketsInRoom(room);
-                                    ack({ players: players, playersCount: players.length});
-                                    log('client ' + socket.id + ' connected to host ' + room + ' (' + players + ')');
-                                    io.to(room).emit('joined', {players: players, playersCount: players.length});
-                                    if (players.length == 4) {
-                                        startTimeOut(room);
-                                    }
-                                }
-                                else {
-                                    log(err, 'e');
-                                    sendError(5, "client: can't join room", socket);
-                                }
-                            });
+                            clients[socket.id] = room;
+                            var players = socketsInRoom(room);
+                            ack({ players: players, playersCount: players.length});
+                            log('client ' + socket.id + ' connected to host ' + room + ' (' + players.length + ')');
+                            io.to(room).emit('joined', {players: players, playersCount: players.length});
                         }
                         else {
                             log(err, 'e');
-                            sendError(4, "client: can't leave room", socket);
+                            sendError(3, "client: can't join room", socket);
                         }
                     });
                 }
             }
             else {
-                sendError(1, "that room doesn't exists", socket, room);
+                sendError(2, "that room doesn't exists", socket, room);
             }
         });
 
-        socket.on('disconnect', function(asd) {
+        socket.on('startCounting', function(socketId) {
+            var room = clients[socketId];
+            var players = socketsInRoom(room);
+            if (players.length == 4) {
+                setTimeout(function () {
+                    startTimeOut(room);
+                }, 5000);
+            }
+            else {
+                sendError(7, "players are not reachable :\\", socket, room);
+            }
+        });
+
+        socket.on('disconnect', function() {
             var room = clients[socket.id];
 
+            clients[socket.id] = null;
+            delete clients[socket.id];
+
             if (room != null) {
-                if (clients[socket.id] == socket.id) {
+                if (hosts[socket.id]) {
+                    hosts[socket.id] = false;
+                    delete hosts[socket.id];
+
                     log('room destroyed');
                     sendError(6, "host left the game", socket, room);
                 }
@@ -182,15 +194,13 @@ function server(io) {
                     io.to(room).emit('playerLeft', {playerLeft: socket.id, players: players, playersCount: players.length});
                 }
             }
-
-            clients[socket.id] = null;
-            delete clients[socket.id];
         });
 
-        //TODO: countdown inizio partita
+        socket.on('update', function(data) {
+            var room = clients[data.socketId];
+            io.to(room).volatile.emit('update', data);
+        });
     });
 }
 
 module.exports = server;
-
-//socket.volatile.emit(...)

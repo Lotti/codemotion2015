@@ -137,7 +137,6 @@ function Pong() {
         }
     };
 
-    //TODO: gestione countdown
     var SynchState = {
         players: 0,
         countdown: false,
@@ -147,6 +146,7 @@ function Pong() {
             if (data.hosting) {
                 host = true;
                 socket.removeAllListeners('joined');
+                socket.emit('startCounting', socket.id);
             }
             else {
                 socket.on('joined', function (data) {
@@ -157,8 +157,8 @@ function Pong() {
                 });
             }
             socket.on('timeOut', function(data, ack) {
-                self.countdown = data;
-                ack(true);
+                self.countdown = parseInt(data.times);
+                ack(socket.id);
             });
         },
         create: function () {
@@ -174,7 +174,7 @@ function Pong() {
             demoMovements();
 
             if (this.countdown) {
-                this.text.text = "Starting in ";
+                this.text.text = "Starting in "+this.countdown+"...";
             }
             else if (host || this.players == 4) {
                 this.text.text = "Waiting for count down...";
