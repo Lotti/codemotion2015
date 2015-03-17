@@ -119,7 +119,7 @@ function Pong() {
 
             for (var i in paddles) {
                 paddles[i].player = i;
-                paddles[i].name = 'player' + (i + 1);
+                paddles[i].name = 'Player' + (parseInt(i) + 1);
                 if (i % 2 == 0) {
                     paddles[i].scale.setTo(50, 10);
                 }
@@ -291,50 +291,52 @@ function Pong() {
             //this.updateServer();
         },
         checkScore: function () {
-            var scored = false;
-            if (ball.body.y < 1) {
-                scored = true;
-                if (ball.player == -1 || ball.player == 0) {
-                    paddles[0].scoreLabel.text--;
+            if (master) {
+                var scored = false;
+                if (ball.body.y < 1) {
                     scored = true;
+                    if (ball.player == -1 || ball.player == 0) {
+                        paddles[0].scoreLabel.text--;
+                        scored = true;
+                    }
+                    else {
+                        paddles[ball.player].scoreLabel.text++;
+                    }
                 }
-                else {
-                    paddles[ball.player].scoreLabel.text++;
+                else if (ball.body.y > game.world.height - ball.body.height - 1) {
+                    scored = true;
+                    if (ball.player == -1 || ball.player == 2) {
+                        paddles[2].scoreLabel.text--;
+                    }
+                    else {
+                        paddles[ball.player].scoreLabel.text++;
+                    }
                 }
-            }
-            else if (ball.body.y > game.world.height - ball.body.height - 1) {
-                scored = true;
-                if (ball.player == -1 || ball.player == 2) {
-                    paddles[2].scoreLabel.text--;
+                else if (ball.body.x < 1) {
+                    scored = true;
+                    if (ball.player == -1 || ball.player == 1) {
+                        paddles[1].scoreLabel.text--;
+                    }
+                    else {
+                        paddles[ball.player].scoreLabel.text++;
+                    }
                 }
-                else {
-                    paddles[ball.player].scoreLabel.text++;
+                else if (ball.body.x > game.world.width - ball.body.width - 1) {
+                    scored = true;
+                    if (ball.player == -1 || ball.player == 3) {
+                        paddles[3].scoreLabel.text--;
+                    }
+                    else {
+                        paddles[ball.player].scoreLabel.text++;
+                    }
                 }
-            }
-            else if (ball.body.x < 1) {
-                scored = true;
-                if (ball.player == -1 || ball.player == 1) {
-                    paddles[1].scoreLabel.text--;
-                }
-                else {
-                    paddles[ball.player].scoreLabel.text++;
-                }
-            }
-            else if (ball.body.x > game.world.width - ball.body.width - 1) {
-                scored = true;
-                if (ball.player == -1 || ball.player == 3) {
-                    paddles[3].scoreLabel.text--;
-                }
-                else {
-                    paddles[ball.player].scoreLabel.text++;
-                }
-            }
 
-            if (scored) { //reset ball position
-                ball.body.position.setTo(game.world.centerX, game.world.centerY);
-                ball.tint = 0xffffff;
-                ball.body.velocity.x = game.rnd.integerInRange(-250, 250);
-                ball.body.velocity.y = game.rnd.integerInRange(-250, 250);
+                if (scored) { //reset ball position
+                    ball.body.position.setTo(game.world.centerX, game.world.centerY);
+                    ball.tint = 0xffffff;
+                    ball.body.velocity.x = game.rnd.integerInRange(-250, 250);
+                    ball.body.velocity.y = game.rnd.integerInRange(-250, 250);
+                }
             }
         },
         inputManagement: function () {
@@ -389,7 +391,8 @@ function Pong() {
         endGame: function (player) {
             ball.body.velocity.setTo(0, 0);
             var style = {font: "50px Arial", fill: "#ffffff", align: "center"};
-            var text = game.add.text(game.world.centerX, game.world.centerY, player.name + " wins!", style);
+            var wonSentence = player.player == currentPlayer ? "You win!" : player.name + " wins!";
+            var text = game.add.text(game.world.centerX, game.world.centerY, wonSentence, style);
             text.anchor.setTo(0.5, 0.5);
 
             $("#endContainer").removeClass("hide");
@@ -435,8 +438,10 @@ function Pong() {
             }
 
             var p = data.player;
-            paddles[p].position.setTo(data.paddleX, data.paddleY);
-            paddles[p].scoreLabel.text = data.paddleScore;
+            if (p != currentPlayer) {
+                paddles[p].position.setTo(data.paddleX, data.paddleY);
+                paddles[p].scoreLabel.text = data.paddleScore;
+            }
         },
         render: function () {
             if (debug) {
