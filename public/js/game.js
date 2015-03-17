@@ -78,6 +78,8 @@ function Pong() {
 
     var LoadingState = {
         preload: function () {
+            game.stage.disableVisibilityChange = true;
+
             this.loadingBar = game.add.sprite(0, 0, 'loadingBar');
             // Center the preload bar
             this.loadingBar.x = game.world.centerX - this.loadingBar.width / 2;
@@ -150,6 +152,8 @@ function Pong() {
         players: 0,
         countdown: false,
         init: function (data) {
+            game.stage.disableVisibilityChange = true;
+
             var self = this;
 
             self.players = parseInt(data.playersCount);
@@ -230,6 +234,8 @@ function Pong() {
     var GameState = {
         inactivePlayers: { 0:false, 1:false, 2:false, 3:false },
         init: function (data) {
+            game.stage.disableVisibilityChange = true;
+
             console.log('gameState init');
             console.log(data);
             var self = this;
@@ -245,10 +251,13 @@ function Pong() {
         },
         create: function () {
             if (!master) {
+                /*
                 ball.body.moves = false;
                 for(var i in paddles) {
                     paddles[i].body.moves = false;
-                }
+                }*/
+                ball.body.velocity.x = 0;
+                ball.body.velocity.y = 0;
             }
             else {
                 ball.body.velocity.x = game.rnd.integerInRange(-250, 250);
@@ -269,7 +278,7 @@ function Pong() {
             }
 
             var self = this;
-            game.time.events.loop(250, function() { self.updateServer(); }, self);
+            game.time.events.loop(100, function() { self.updateServer(); }, self);
         },
         update: function () {
             for (var i in paddles) {
@@ -288,7 +297,7 @@ function Pong() {
             }
             this.inputManagement();
             demoMovements(this.inactivePlayers);
-            //this.updateServer();
+            this.updateServer();
         },
         checkScore: function () {
             if (master) {
@@ -398,18 +407,14 @@ function Pong() {
             $("#endContainer").removeClass("hide");
             $("#connect").css("background-color", "transparent");
         },
-/*
         socketTiming: 0,
-        socketDelay: 250,
-*/
+        socketDelay: 50,
         updateServer: function () {
-            /*
             this.socketTiming+=game.time.elapsed;
             if (this.socketTiming < this.socketDelay) {
                 return;
             }
             this.socketTiming = 0;
-            */
             var data = { socketId: socket.id };
 
             if (master) {
