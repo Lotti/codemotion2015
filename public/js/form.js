@@ -21,7 +21,7 @@ $(function() {
             if ($playersCount.length > 0) {
                 $playersCount.text(data.playersCount);
             }
-            if (data.playersCount == 2) {
+            if (data.playersCount == 4) {
                 $("#connect").addClass("hide");
                 pong.sync({ hosting: true, playersCount: data.playersCount });
             }
@@ -32,7 +32,7 @@ $(function() {
             if ($playersCount.length > 0) {
                 $playersCount.text(data.playersCount);
             }
-            if (data.playersCount == 2) {
+            if (data.playersCount == 4) {
                 $("#connect").addClass("hide");
                 pong.sync({ hosting: true, playersCount: data.playersCount });
             }
@@ -41,7 +41,8 @@ $(function() {
             new QRCode(document.getElementById("qrcode"),
                 {
                     text: window.location.href+"#"+data,
-                    width: 245, height: 245
+                    width: 245,
+                    height: 245
                 });
             $("#gameId").text(data);
         });
