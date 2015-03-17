@@ -276,9 +276,6 @@ function Pong() {
                 paddles[i].scoreLabel = game.add.text(scoresPos[i].w, scoresPos[i].h, "0", style);
                 paddles[i].scoreLabel.anchor.setTo(0.5, 0.5);
             }
-
-            var self = this;
-            game.time.events.loop(100, function() { self.updateServer(); }, self);
         },
         update: function () {
             for (var i in paddles) {
