@@ -21,7 +21,7 @@ $(function() {
             if ($playersCount.length > 0) {
                 $playersCount.text(data.playersCount);
             }
-            if (data.playersCount == 4) {
+            if (data.playersCount == 2) {
                 $("#connect").addClass("hide");
                 pong.sync({ hosting: true, playersCount: data.playersCount });
             }
@@ -32,7 +32,7 @@ $(function() {
             if ($playersCount.length > 0) {
                 $playersCount.text(data.playersCount);
             }
-            if (data.playersCount == 4) {
+            if (data.playersCount == 2) {
                 $("#connect").addClass("hide");
                 pong.sync({ hosting: true, playersCount: data.playersCount });
             }
@@ -63,6 +63,12 @@ $(function() {
         socket.emit('join', $("#inputGameId").val(), function(data) {
             pong.sync({ hosting: false, playersCount: parseInt(data.playersCount) });
         });
+    });
+
+    $("#restartGame").click(function () {
+        socket.removeAllListeners('disconnect');
+        socket.disconnect();
+        window.location.reload();
     });
 
     $(window).keypress(function (e) {

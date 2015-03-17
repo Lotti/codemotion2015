@@ -13,6 +13,7 @@
 #connect {
   width: 320px;
   height: 320px;
+  background-color: #777777;
 
   position: absolute;
   margin: auto;
@@ -21,7 +22,6 @@
   left: 0;
   right: 0;
 
-  background-color: #777777;
   text-align: center;
 
   table {
@@ -30,8 +30,13 @@
     padding: 10px;
   }
 
-  table td {
-    vertical-align: middle;
+  table {
+    td {
+      vertical-align: middle;
+    }
+    #endContainer td {
+      vertical-align: bottom;
+    }
   }
 }
 
@@ -40,7 +45,7 @@
     height: 100%;
 }
 
-#hostGame, #joinGame, #inputGameId, #joinGameId {
+#hostGame, #joinGame, #inputGameId, #joinGameId, #restartGame {
   width: 200px;
   height: 100px;
   font-size: 24px;

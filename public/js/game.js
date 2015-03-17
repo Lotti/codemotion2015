@@ -2,7 +2,7 @@ function Pong() {
     var self = this;
     var socket = io();
     socket.on('disconnect', function(data) {
-        var msg = 'Server went offline. Try again in few minutes!';
+        var msg = 'Connection loss :\\';
         console.error(msg+"\n"+data);
         window.alert(msg+"\n"+data);
         window.location.reload(true);
@@ -18,7 +18,7 @@ function Pong() {
         window.location.reload(true);
     });
 
-    var debug = true;
+    var debug = false;
 
     var gameDiv = "game";
     var gameWidth = parseInt(document.getElementById(gameDiv).offsetWidth);
@@ -37,8 +37,16 @@ function Pong() {
 
     var colors = ["ff0000", "00ff00", "0000ff", "ffff00"];
 
-    function demoMovements () {
+    function demoMovements(inactivePlayers) {
+        if (inactivePlayers == undefined) {
+            inactivePlayers = {0:true, 1:true, 2:true, 3:true};
+        }
+
         for (var i in paddles) {
+            if (!inactivePlayers[i]) {
+                continue;
+            }
+
             var p = paddles[i];
             var pH2 = p.body.height;
             var pW2 = p.body.width;
@@ -143,14 +151,15 @@ function Pong() {
         countdown: false,
         init: function (data) {
             var self = this;
-            self.p = data.playersCount -1;
+
             self.players = parseInt(data.playersCount);
             if (data.hosting) {
+                self.p = 0;
                 host = true;
-                socket.removeAllListeners('joined');
                 socket.emit('startCounting', socket.id);
             }
             else {
+                self.p = data.playersCount -1;
                 socket.on('joined', function (data) {
                     self.players = parseInt(data.playersCount);
                 });
@@ -180,7 +189,7 @@ function Pong() {
                 demoMovements();
             }
             else {
-                initGame(this.countdown);
+                this.initGame(this.countdown);
             }
 
             if (this.countdown) {
@@ -196,20 +205,21 @@ function Pong() {
         initGame: function(phase) {
             switch(phase) {
                 case 1:
-                    ball.position.setTo(game.width / 2, game,height / 2);
+                    ball.position.setTo(game.width / 2, game.height / 2);
                     ball.tint = 0xffffff;
                     ball.player = -1;
                     ball.body.velocity.x = 0;
                     ball.body.velocity.y = 0;
-                break;
                 case 2:
-                    this.text.text = "GO!";
                     paddles[0].position.setTo(game.width / 2, 5);
                     paddles[1].position.setTo(5, game.height / 2);
                     paddles[2].position.setTo(game.width / 2, game.height - 5);
                     paddles[3].position.setTo(game.width - 5, game.height / 2);
-                break;
+                    this.text.text = "GO!";
                 case 3:
+                    socket.removeAllListeners('joined');
+                    socket.removeAllListeners('timeOut');
+                    socket.removeAllListeners('playerLeft');
                     this.text.destroy();
                     game.state.start("game", false, false, { player: this.p });
                 break;
@@ -217,23 +227,34 @@ function Pong() {
         }
     };
 
-    //TODO: gestire utente disconnesso
-    //TODO: riscrivere gamestate per sfruttare sprite già presenti sulla scena
-    //TODO: trasferimento dati
-    //TODO: endgame?
     var GameState = {
+        inactivePlayers: { 0:false, 1:false, 2:false, 3:false },
         init: function (data) {
+            console.log('gameState init');
+            console.log(data);
+            var self = this;
             currentPlayer = data.player;
             master = data.player == 0;
 
-            socket.on('update', function(data) {
-                self.countdown = parseInt(data.times);
+            socket.on('playerLeft', function (data) {
+                self.inactivePlayers[parseInt(data.playerLeft)] = true;
             });
-            socket.on('input', function(data) {
-                self.countdown = parseInt(data.times);
+            socket.on('clientUpdate', function(data) {
+                self.updateClient(data);
             });
         },
         create: function () {
+            if (!master) {
+                ball.body.moves = false;
+                for(var i in paddles) {
+                    paddles[i].body.moves = false;
+                }
+            }
+            else {
+                ball.body.velocity.x = game.rnd.integerInRange(-250, 250);
+                ball.body.velocity.y = game.rnd.integerInRange(-250, 250);
+            }
+
             var scoresPos = [
                 {w: game.world.centerX, h: game.world.centerY - 100},
                 {w: game.world.centerX - 100, h: game.world.centerY},
@@ -246,17 +267,28 @@ function Pong() {
                 paddles[i].scoreLabel = game.add.text(scoresPos[i].w, scoresPos[i].h, "0", style);
                 paddles[i].scoreLabel.anchor.setTo(0.5, 0.5);
             }
+
+            var self = this;
+            game.time.events.loop(250, function() { self.updateServer(); }, self);
         },
         update: function () {
+            for (var i in paddles) {
+                if (paddles[i].scoreLabel.text > 9) {
+                    this.endGame(paddles[i]);
+                    return;
+                }
+            }
+
             if (master) {
                 game.physics.arcade.collide(ball, paddles, function (ball, player) {
                     ball.tint = player.tint;
                     ball.player = player.player;
                 });
                 this.checkScore();
-                //this.updateServer();
             }
             this.inputManagement();
+            demoMovements(this.inactivePlayers);
+            //this.updateServer();
         },
         checkScore: function () {
             var scored = false;
@@ -301,19 +333,13 @@ function Pong() {
             if (scored) { //reset ball position
                 ball.body.position.setTo(game.world.centerX, game.world.centerY);
                 ball.tint = 0xffffff;
-                ball.body.velocity.x = game.rnd.integerInRange(-200, 200);
-                ball.body.velocity.y = game.rnd.integerInRange(-200, 200);
-            }
-
-            for (var i in paddles) {
-                if (paddles[i].scoreLabel.text > 9) {
-                    this.endGame(paddles[i]);
-                }
+                ball.body.velocity.x = game.rnd.integerInRange(-250, 250);
+                ball.body.velocity.y = game.rnd.integerInRange(-250, 250);
             }
         },
         inputManagement: function () {
             var moveFactor = 2;
-            if (this.cursors.left.isDown || this.cursors.up.isDown) {
+            if (cursors.left.isDown || cursors.up.isDown) {
                 switch (currentPlayer) {
                     case 0:
                     case 2:
@@ -325,7 +351,7 @@ function Pong() {
                         break;
                 }
             }
-            else if (this.cursors.right.isDown || this.cursors.down.isDown) {
+            else if (cursors.right.isDown || cursors.down.isDown) {
                 switch (currentPlayer) {
                     case 0:
                     case 2:
@@ -365,15 +391,52 @@ function Pong() {
             var style = {font: "50px Arial", fill: "#ffffff", align: "center"};
             var text = game.add.text(game.world.centerX, game.world.centerY, player.name + " wins!", style);
             text.anchor.setTo(0.5, 0.5);
+
+            $("#endContainer").removeClass("hide");
+            $("#connect").css("background-color", "transparent");
         },
+/*
+        socketTiming: 0,
+        socketDelay: 250,
+*/
         updateServer: function () {
-            for (var i in paddles) {
-                paddles[i].body.x;
-                paddles[i].body.y;
-                paddles[i].scoreLabel.text;
+            /*
+            this.socketTiming+=game.time.elapsed;
+            if (this.socketTiming < this.socketDelay) {
+                return;
             }
-            ball.body.x;
-            ball.body.y;
+            this.socketTiming = 0;
+            */
+            var data = { socketId: socket.id };
+
+            if (master) {
+                data['ball'] = true;
+                data['ballX'] = ball.body.x;
+                data['ballY'] = ball.body.y;
+                data['ballTint'] = ball.tint;
+            }
+            else {
+                data['ball'] = false;
+            }
+
+            data['player'] = currentPlayer;
+            data['paddleX'] = paddles[currentPlayer].body.x;
+            data['paddleY'] = paddles[currentPlayer].body.y;
+            data['paddleScore'] = parseInt(paddles[currentPlayer].scoreLabel.text);
+
+            console.log('updateServer');
+            console.log(data);
+            socket.emit('gameUpdate', data);
+        },
+        updateClient: function (data) {
+            if (!master && data.ball == true) {
+                ball.position.setTo(data.ballX, data.ballY);
+                ball.tint = data.ballTint;
+            }
+
+            var p = data.player;
+            paddles[p].position.setTo(data.paddleX, data.paddleY);
+            paddles[p].scoreLabel.text = data.paddleScore;
         },
         render: function () {
             if (debug) {

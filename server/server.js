@@ -1,6 +1,12 @@
 function server(io) {
     var debug = true;
+    var timeOutDelay = 2500;
+    var maxPlayers = 4;
+    if (debug) {
+        maxPlayers = 2;
+    }
 
+    var clientPlayers = {};
     var clients = {};
     var hosts = {};
 
@@ -32,8 +38,8 @@ function server(io) {
         return io.nsps["/"].adapter.rooms[room] != undefined;
     }
 
-    function getSocket(id) {
-        return io.sockets.connected[id];
+    function getSocket(socketId) {
+        return io.sockets.connected[socketId];
     }
 
     function getRoom(room) {
@@ -57,7 +63,8 @@ function server(io) {
             log("rooms is undefined :\\",'e');
         }
 
-        return Object.keys(getRoom(room));
+        var r = getRoom(room);
+        return Object.keys(r);
     }
 
     function sendError(number, msg, socket, room) {
@@ -86,7 +93,7 @@ function server(io) {
         if (times > 3) {
             return;
         }
-        else if (playerCounter >= 4) {
+        else if (playerCounter >= maxPlayers) {
             startTimeOut(room, 0, ++times);
         }
         else {
@@ -94,9 +101,9 @@ function server(io) {
             var socket = io.sockets.connected[players[playerCounter]];
             //var socket = getSocket(sid);
             if (socket != undefined) {
-                log('ticking... '+times+ sid);
+                log('ticking... '+times+' '+ sid);
                 socket.emit('timeOut', {times: times}, function (socketId) {
-                    log('ticking back... '+times+ socketId);
+                    log('ticking back... '+times+' '+ socketId);
                     startTimeOut(room, ++playerCounter, times);
                 });
             }
@@ -110,6 +117,7 @@ function server(io) {
         clients[socket.id] = null;
 
         socket.on('error', function(data) {
+            log('onError','e');
             log(data,'e');
         });
 
@@ -118,6 +126,7 @@ function server(io) {
             if (debug) room = 1;
             socket.join(room, function (err) {
                 if (!err) {
+                    clientPlayers[socket.id] = 0;
                     clients[socket.id] = room;
                     hosts[socket.id] = true;
                     ack(room);
@@ -138,7 +147,7 @@ function server(io) {
                 if (c < 1) {
                     sendError(4, "that room doesn't exists", socket, room);
                 }
-                else if (c >= 4) {
+                else if (c >= maxPlayers) {
                     sendError(5, "the room is full!", socket, room);
                 }
                 else {
@@ -146,9 +155,10 @@ function server(io) {
                         if (!err) {
                             clients[socket.id] = room;
                             var players = socketsInRoom(room);
+                            clientPlayers[socket.id] = players.length - 1;
                             ack({ players: players, playersCount: players.length});
                             log('client ' + socket.id + ' connected to host ' + room + ' (' + players.length + ')');
-                            io.to(room).emit('joined', {players: players, playersCount: players.length});
+                            io.to(room).emit('joined', { playersCount: players.length });
                         }
                         else {
                             log(err, 'e');
@@ -165,10 +175,10 @@ function server(io) {
         socket.on('startCounting', function(socketId) {
             var room = clients[socketId];
             var players = socketsInRoom(room);
-            if (players.length == 4) {
+            if (players.length == maxPlayers) {
                 setTimeout(function () {
                     startTimeOut(room);
-                }, 5000);
+                }, timeOutDelay);
             }
             else {
                 sendError(7, "players are not reachable :\\", socket, room);
@@ -176,8 +186,11 @@ function server(io) {
         });
 
         socket.on('disconnect', function() {
-            var room = clients[socket.id];
+            var p = clientPlayers[socket.id];
+            clientPlayers[socket.id] = null;
+            delete clientPlayers[socket.id];
 
+            var room = clients[socket.id];
             clients[socket.id] = null;
             delete clients[socket.id];
 
@@ -191,14 +204,14 @@ function server(io) {
                 }
                 else {
                     var players = socketsInRoom(room);
-                    io.to(room).emit('playerLeft', {playerLeft: socket.id, players: players, playersCount: players.length});
+                    io.to(room).emit('playerLeft', { playerLeft: p, playersCount: players.length });
                 }
             }
         });
 
-        socket.on('update', function(data) {
+        socket.on('gameUpdate', function(data) {
             var room = clients[data.socketId];
-            io.to(room).volatile.emit('update', data);
+            io.to(room).emit('clientUpdate', data);
         });
     });
 }
