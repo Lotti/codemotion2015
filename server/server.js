@@ -1,5 +1,5 @@
 function server(io) {
-    var debug = true;
+    var debug = false;
     var timeOutDelay = 2500;
     var maxPlayers = 4;
     if (debug) {
@@ -157,7 +157,7 @@ function server(io) {
                             var players = socketsInRoom(room);
                             clientPlayers[socket.id] = players.length - 1;
                             ack({ players: players, playersCount: players.length});
-                            log('client ' + socket.id + ' connected to host ' + room + ' (' + players.length + ')');
+                            log('client ' + socket.id + ' connected to room ' + room + ' (' + players.length + '/'+maxPlayers+')');
                             io.to(room).emit('joined', { playersCount: players.length });
                         }
                         else {
@@ -209,9 +209,24 @@ function server(io) {
             }
         });
 
+        socket.on('ping', function() {
+            socket.emit('pong');
+        });
+
         socket.on('gameUpdate', function(data) {
             var room = clients[data.socketId];
+            delete data.socketId;
             io.to(room).emit('clientUpdate', data);
+        });
+        socket.on('gameScores', function(data) {
+            var room = clients[data.socketId];
+            delete data.socketId;
+            io.to(room).emit('clientUpdateScores', data);
+        });
+        socket.on('gameBall', function(data) {
+            var room = clients[data.socketId];
+            delete data.socketId;
+            io.to(room).emit('clientUpdateBall', data);
         });
     });
 }

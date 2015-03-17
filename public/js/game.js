@@ -18,6 +18,22 @@ function Pong() {
         window.location.reload(true);
     });
 
+    var pingTime;
+    var ping;
+    socket.on('pong', function () {
+        latency = Date.now() - pingTime;
+        ping = latency;
+    });
+
+    function measurePing() {
+        setTimeout(function () {
+            pingTime = Date.now();
+            socket.emit('ping');
+            measurePing();
+        }, 2000);
+    }
+    measurePing();
+
     var debug = false;
 
     var gameDiv = "game";
@@ -48,8 +64,8 @@ function Pong() {
             }
 
             var p = paddles[i];
-            var pH2 = p.body.height;
-            var pW2 = p.body.width;
+            var pH2 = p.body.height/2;
+            var pW2 = p.body.width/2;
             switch (parseInt(i)) {
                 case 0:
                 case 2:
@@ -95,24 +111,25 @@ function Pong() {
 
             sprites = game.add.group();
 
-            ball = sprites.create(game.width / 2, game.height / 2, 'pixel');
+            ball = sprites.create(game.world.width / 2, game.world.height / 2, 'pixel');
             ball.name = 'ball';
             ball.scale.setTo(10, 10);
             ball.anchor.setTo(0.5, 0.5);
 
             game.physics.enable([ball], Phaser.Physics.ARCADE);
-            ball.body.velocity.x = game.rnd.integerInRange(-200, 200);
-            ball.body.velocity.y = game.rnd.integerInRange(-200, 200);
+            var sign = game.rnd.integerInRange(0,1) == 0 ? 1 : -1;
+            ball.body.velocity.x = game.rnd.integerInRange(100, 250) * sign;
+            ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
             ball.body.bounce.x = 1;
             ball.body.bounce.y = 1;
             ball.body.minBounceVelocity = 0;
             ball.player = -1;
 
             paddles = [];
-            paddles.push(sprites.create(game.width / 2, 5, 'pixel'));
-            paddles.push(sprites.create(5, game.height / 2, 'pixel'));
-            paddles.push(sprites.create(game.width / 2, game.height - 5, 'pixel'));
-            paddles.push(sprites.create(game.width - 5, game.height / 2, 'pixel'));
+            paddles.push(sprites.create(game.world.width / 2, 5, 'pixel'));
+            paddles.push(sprites.create(5, game.world.height / 2, 'pixel'));
+            paddles.push(sprites.create(game.world.width / 2, game.world.height - 5, 'pixel'));
+            paddles.push(sprites.create(game.world.width - 5, game.world.height / 2, 'pixel'));
 
             paddles[0].tint = 0xff0000;
             paddles[1].tint = 0x00ff00;
@@ -209,16 +226,16 @@ function Pong() {
         initGame: function(phase) {
             switch(phase) {
                 case 1:
-                    ball.position.setTo(game.width / 2, game.height / 2);
+                    ball.position.setTo(game.world.width / 2, game.world.height / 2);
                     ball.tint = 0xffffff;
                     ball.player = -1;
                     ball.body.velocity.x = 0;
                     ball.body.velocity.y = 0;
                 case 2:
-                    paddles[0].position.setTo(game.width / 2, 5);
-                    paddles[1].position.setTo(5, game.height / 2);
-                    paddles[2].position.setTo(game.width / 2, game.height - 5);
-                    paddles[3].position.setTo(game.width - 5, game.height / 2);
+                    paddles[0].position.setTo(game.world.width / 2, 5);
+                    paddles[1].position.setTo(5, game.world.height / 2);
+                    paddles[2].position.setTo(game.world.width / 2, game.world.height - 5);
+                    paddles[3].position.setTo(game.world.width - 5, game.world.height / 2);
                     this.text.text = "GO!";
                 case 3:
                     socket.removeAllListeners('joined');
@@ -236,8 +253,6 @@ function Pong() {
         init: function (data) {
             game.stage.disableVisibilityChange = true;
 
-            console.log('gameState init');
-            console.log(data);
             var self = this;
             currentPlayer = data.player;
             master = data.player == 0;
@@ -248,21 +263,28 @@ function Pong() {
             socket.on('clientUpdate', function(data) {
                 self.updateClient(data);
             });
+            socket.on('clientUpdateScores', function(data) {
+                self.updateClientScores(data);
+            });
+            socket.on('clientUpdateBall', function (data) {
+                self.updateClientBall(data);
+            });
         },
         create: function () {
             if (!master) {
-                /*
-                ball.body.moves = false;
-                for(var i in paddles) {
-                    paddles[i].body.moves = false;
-                }*/
                 ball.body.velocity.x = 0;
                 ball.body.velocity.y = 0;
             }
             else {
-                ball.body.velocity.x = game.rnd.integerInRange(-250, 250);
-                ball.body.velocity.y = game.rnd.integerInRange(-250, 250);
+                var sign = game.rnd.integerInRange(0,1) == 0 ? 1 : -1;
+                ball.body.velocity.x = game.rnd.integerInRange(100, 250) * sign;
+                ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
             }
+
+            paddles[0].position.setTo(game.world.width / 2, 5);
+            paddles[1].position.setTo(5, game.world.height / 2);
+            paddles[2].position.setTo(game.world.width / 2, game.world.height - 5);
+            paddles[3].position.setTo(game.world.width - 5, game.world.height / 2);
 
             var scoresPos = [
                 {w: game.world.centerX, h: game.world.centerY - 100},
@@ -289,6 +311,10 @@ function Pong() {
                 game.physics.arcade.collide(ball, paddles, function (ball, player) {
                     ball.tint = player.tint;
                     ball.player = player.player;
+
+                    var data = { socketId: socket.id };
+                    data['ballTint'] = ball.tint;
+                    socket.emit('gameBall', data);
                 });
                 this.checkScore();
             }
@@ -338,10 +364,20 @@ function Pong() {
                 }
 
                 if (scored) { //reset ball position
+                    var data = { socketId: socket.id };
+                    data['scores'] = [];
+                    for(var i in paddles) {
+                        data['scores'].push(parseInt(paddles[i].scoreLabel.text));
+                    }
+                    socket.emit('gameScores', data);
+
                     ball.body.position.setTo(game.world.centerX, game.world.centerY);
+                    ball.player = -1;
                     ball.tint = 0xffffff;
-                    ball.body.velocity.x = game.rnd.integerInRange(-250, 250);
-                    ball.body.velocity.y = game.rnd.integerInRange(-250, 250);
+
+                    var sign = game.rnd.integerInRange(0,1) == 0 ? 1 : -1;
+                    ball.body.velocity.x = game.rnd.integerInRange(100, 250) * sign;
+                    ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
                 }
             }
         },
@@ -401,14 +437,24 @@ function Pong() {
             var text = game.add.text(game.world.centerX, game.world.centerY, wonSentence, style);
             text.anchor.setTo(0.5, 0.5);
 
+            socket.removeAllListeners('playerLeft');
+            socket.removeAllListeners('clientUpdate');
+            socket.removeAllListeners('clientUpdateScores');
+            socket.removeAllListeners('clientUpdateBall');
+            socket.removeAllListeners('disconnect');
+            socket.disconnect();
+
             $("#endContainer").removeClass("hide");
-            $("#connect").css("background-color", "transparent");
+            $("#connect").removeClass("hide").css("background-color", "transparent");
         },
         socketTiming: 0,
-        socketDelay: 50,
+        socketDelay: 16,
+        getSocketDelay: function() {
+            return ping < this.socketDelay ? ping : this.socketDelay;
+        },
         updateServer: function () {
             this.socketTiming+=game.time.elapsed;
-            if (this.socketTiming < this.socketDelay) {
+            if (this.socketTiming < this.getSocketDelay()) {
                 return;
             }
             this.socketTiming = 0;
@@ -416,33 +462,57 @@ function Pong() {
 
             if (master) {
                 data['ball'] = true;
-                data['ballX'] = ball.body.x;
-                data['ballY'] = ball.body.y;
-                data['ballTint'] = ball.tint;
+                data['ballX'] = parseFloat(ball.body.x).toFixed(2);
+                data['ballY'] = parseFloat(ball.body.y).toFixed(2);
             }
             else {
                 data['ball'] = false;
             }
 
-            data['player'] = currentPlayer;
-            data['paddleX'] = paddles[currentPlayer].body.x;
-            data['paddleY'] = paddles[currentPlayer].body.y;
-            data['paddleScore'] = parseInt(paddles[currentPlayer].scoreLabel.text);
+            data['player'] = parseInt(currentPlayer);
+            switch(data['player']) {
+                case 0:
+                case 2:
+                    data['paddle'] = parseFloat(paddles[currentPlayer].body.x).toFixed(2);
+                break;
+                case 1:
+                case 3:
+                    data['paddle'] = parseFloat(paddles[currentPlayer].body.y).toFixed(2);
+                break;
+            }
 
-            console.log('updateServer');
-            console.log(data);
             socket.emit('gameUpdate', data);
         },
         updateClient: function (data) {
             if (!master && data.ball == true) {
-                ball.position.setTo(data.ballX, data.ballY);
-                ball.tint = data.ballTint;
+                ball.position.x = parseFloat(data.ballX);
+                ball.position.y = parseFloat(data.ballY);
             }
 
-            var p = data.player;
-            if (p != currentPlayer) {
-                paddles[p].position.setTo(data.paddleX, data.paddleY);
-                paddles[p].scoreLabel.text = data.paddleScore;
+            if (data.player != currentPlayer) {
+                switch(parseInt(data.player)) {
+                    case 0:
+                    case 2:
+                        paddles[data.player].position.x = parseFloat(data.paddle);
+                    break;
+                    case 1:
+                    case 3:
+                        paddles[data.player].position.y = parseFloat(data.paddle);
+                    break;
+                }
+            }
+        },
+        updateClientScores: function(data) {
+            if (!master) {
+                ball.tint = 0xffffff;
+                for(var i in data.scores) {
+                    paddles[i].scoreLabel.text = parseInt(data.scores[i]);
+                }
+            }
+        },
+        updateClientBall: function(data) {
+            if (!master) {
+                ball.tint = data.ballTint;
             }
         },
         render: function () {
