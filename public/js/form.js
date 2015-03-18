@@ -61,7 +61,7 @@ $(function() {
     $("#joinGameId").click(function () {
         $("#connect").addClass("hide");
 
-        socket.emit('join', $("#inputGameId").val(), function(data) {
+        socket.emit('join', $("#inputGameId").val().trim(), function(data) {
             pong.sync({ hosting: false, playersCount: parseInt(data.playersCount) });
         });
     });
@@ -70,12 +70,6 @@ $(function() {
         socket.removeAllListeners('disconnect');
         socket.disconnect();
         location.href = location.href.replace(location.hash,"");
-    });
-
-    $(window).keypress(function (e) {
-        if (e.charCode == 114) {
-            window.location.reload(true);
-        }
     });
 
     if (hash.length > 0) {

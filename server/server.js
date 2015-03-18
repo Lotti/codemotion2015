@@ -158,6 +158,7 @@ function server(io) {
             var room = data;
             if (debug) room = 1;
             if (roomExists(room)) {
+                console.log("room exists");
                 var c = socketsInRoom(room).length;
                 if (c < 1) {
                     sendError(4, "that room doesn't exists", socket, room);
@@ -183,7 +184,8 @@ function server(io) {
                 }
             }
             else {
-                sendError(2, "that room doesn't exists", socket, room);
+                console.log("room doesn't exists");
+                sendError(2, "that room doesn't exists", socket);
             }
         });
 

@@ -27,25 +27,23 @@
 }
 #connect table td {
   vertical-align: middle;
+  text-align: center;
 }
 #connect table #endContainer td {
   vertical-align: bottom;
+  text-align: center;
 }
 #game {
   width: 100%;
   height: 100%;
 }
-#hostGame,
-#joinGame,
-#inputGameId,
-#joinGameId,
-#restartGame {
+.button {
   width: 200px;
   height: 100px;
   font-size: 24px;
   text-align: center;
   border: none;
-  margin: 5px;
+  margin: 5px 0px;
 }
 .hide {
   display: none;

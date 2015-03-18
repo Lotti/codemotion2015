@@ -72,13 +72,13 @@ function Pong() {
                     if (ball.body.x <= game.world.width - pW2) {
                         p.position.x = ball.position.x;
                     }
-                    break;
+                break;
                 case 1:
                 case 3:
                     if (ball.body.y <= game.world.height - pH2) {
                         p.position.y = ball.position.y;
                     }
-                    break;
+                break;
             }
         }
     }
@@ -189,6 +189,7 @@ function Pong() {
                 });
             }
             socket.on('timeOut', function(data, ack) {
+                console.log(data);
                 self.countdown = parseInt(data.times);
                 ack(socket.id);
             });
@@ -206,14 +207,14 @@ function Pong() {
                 ball.tint = player.tint;
             });
 
-            if (!this.countdown || this.countdown < 0) {
+            if (this.countdown === false) {
                 demoMovements();
             }
             else {
                 this.initGame(this.countdown);
             }
 
-            if (this.countdown) {
+            if (this.countdown !== false) {
                 this.text.text = "Starting in "+this.countdown+"...";
             }
             else if (host || this.players == 4) {
@@ -383,27 +384,29 @@ function Pong() {
         },
         inputManagement: function () {
             var moveFactor = 3;
+            var p = paddles[currentPlayer];
+
             if (cursors.left.isDown || cursors.up.isDown) {
                 switch (currentPlayer) {
                     case 0:
                     case 2:
-                        paddles[currentPlayer].position.x -= moveFactor;
-                        break;
+                        p.position.x -= moveFactor;
+                    break;
                     case 1:
                     case 3:
-                        paddles[currentPlayer].position.y -= moveFactor;
-                        break;
+                        P.position.y -= moveFactor;
+                    break;
                 }
             }
             else if (cursors.right.isDown || cursors.down.isDown) {
                 switch (currentPlayer) {
                     case 0:
                     case 2:
-                        paddles[currentPlayer].position.x += moveFactor;
+                        p.position.x += moveFactor;
                     break;
                     case 1:
                     case 3:
-                        paddles[currentPlayer].position.y += moveFactor;
+                        p.position.y += moveFactor;
                     break;
                 }
             }
@@ -412,22 +415,39 @@ function Pong() {
                     case 0:
                     case 2:
                         if (game.input.activePointer.x > paddles[currentPlayer].position.x) {
-                            paddles[currentPlayer].position.x += moveFactor;
+                            p.position.x += moveFactor;
                         }
                         else if (game.input.activePointer.x < paddles[currentPlayer].position.x) {
-                            paddles[currentPlayer].position.x -= moveFactor;
+                            p.position.x -= moveFactor;
                         }
                     break;
                     case 1:
                     case 3:
                         if (game.input.activePointer.y > paddles[currentPlayer].position.y) {
-                            paddles[currentPlayer].position.y += moveFactor;
+                            p.position.y += moveFactor;
                         }
                         else if (game.input.activePointer.y < paddles[currentPlayer].position.y) {
-                            paddles[currentPlayer].position.y -= moveFactor;
+                            p.position.y -= moveFactor;
                         }
                     break;
                 }
+            }
+
+            var pH2 = p.body.height/2;
+            var pW2 = p.body.width/2;
+            switch (currentPlayer) {
+                case 0:
+                case 2:
+                    if (p.position.x > game.world.width - pW2) {
+                        p.position.x = game.world.width - pW2;
+                    }
+                break;
+                case 1:
+                case 3:
+                    if (p.position.y > game.world.height - pH2) {
+                        p.position.y = game.world.height - pH2;
+                    }
+                break;
             }
         },
         endGame: function (player) {
