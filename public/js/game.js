@@ -5,17 +5,17 @@ function Pong() {
         var msg = 'Connection loss :\\';
         console.error(msg+"\n"+data);
         window.alert(msg+"\n"+data);
-        window.location.reload(true);
+        location.href = location.href.replace(location.hash,"");
     });
     socket.on('error', function(data) {
         console.error(data);
         window.alert(data);
-        window.location.reload(true);
+        location.href = location.href.replace(location.hash,"");
     });
     socket.on('errorMsg', function(data) {
         console.error("[Error:"+data.num+"] "+data.msg);
         window.alert("Error "+data.num+"\n"+data.msg);
-        window.location.reload(true);
+        location.href = location.href.replace(location.hash,"");
     });
 
     var pingTime;

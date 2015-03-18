@@ -69,7 +69,7 @@ $(function() {
     $("#restartGame").click(function () {
         socket.removeAllListeners('disconnect');
         socket.disconnect();
-        window.location.reload();
+        location.href = location.href.replace(location.hash,"");
     });
 
     $(window).keypress(function (e) {

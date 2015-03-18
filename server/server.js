@@ -64,7 +64,12 @@ function server(io) {
         }
 
         var r = getRoom(room);
-        return Object.keys(r);
+        if (typeof r === 'object') {
+            return Object.keys(r);
+        }
+        else {
+            return [];
+        }
     }
 
     function sendError(number, msg, socket, room) {
@@ -204,7 +209,9 @@ function server(io) {
                 }
                 else {
                     var players = socketsInRoom(room);
-                    io.to(room).emit('playerLeft', { playerLeft: p, playersCount: players.length });
+                    if (players.length > 0) {
+                        io.to(room).emit('playerLeft', { playerLeft: p, playersCount: players.length });
+                    }
                 }
             }
         });
