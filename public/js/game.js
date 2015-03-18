@@ -53,6 +53,9 @@ function Pong() {
 
     var colors = ["ff0000", "00ff00", "0000ff", "ffff00"];
 
+    var padSize = 8;
+    var moveFactor = 4;
+
     function demoMovements(inactivePlayers) {
         if (inactivePlayers == undefined) {
             inactivePlayers = {0:true, 1:true, 2:true, 3:true};
@@ -126,10 +129,10 @@ function Pong() {
             ball.player = -1;
 
             paddles = [];
-            paddles.push(sprites.create(game.world.width / 2, 5, 'pixel'));
-            paddles.push(sprites.create(5, game.world.height / 2, 'pixel'));
-            paddles.push(sprites.create(game.world.width / 2, game.world.height - 5, 'pixel'));
-            paddles.push(sprites.create(game.world.width - 5, game.world.height / 2, 'pixel'));
+            paddles.push(sprites.create(game.world.width / 2, padSize, 'pixel'));
+            paddles.push(sprites.create(padSize, game.world.height / 2, 'pixel'));
+            paddles.push(sprites.create(game.world.width / 2, game.world.height - padSize, 'pixel'));
+            paddles.push(sprites.create(game.world.width - padSize, game.world.height / 2, 'pixel'));
 
             paddles[0].tint = 0xff0000;
             paddles[1].tint = 0x00ff00;
@@ -140,13 +143,13 @@ function Pong() {
                 paddles[i].player = i;
                 paddles[i].name = 'Player' + (parseInt(i) + 1);
                 if (i % 2 == 0) {
-                    paddles[i].scale.setTo(50, 10);
+                    paddles[i].scale.setTo(padSize*10, 10);
                 }
                 else {
-                    paddles[i].scale.setTo(10, 50);
+                    paddles[i].scale.setTo(10, padSize*10);
                 }
                 paddles[i].anchor.setTo(0.5, 0.5);
-                game.physics.enable([paddles[i]], Phaser.Physics.ARCADE);
+                game.physics.enable([ paddles[i] ], Phaser.Physics.ARCADE);
                 paddles[i].body.bounce.x = 1;
                 paddles[i].body.bounce.y = 1;
                 paddles[i].body.minBounceVelocity = 0;
@@ -233,10 +236,10 @@ function Pong() {
                     ball.body.velocity.x = 0;
                     ball.body.velocity.y = 0;
                 case 2:
-                    paddles[0].position.setTo(game.world.width / 2, 5);
-                    paddles[1].position.setTo(5, game.world.height / 2);
-                    paddles[2].position.setTo(game.world.width / 2, game.world.height - 5);
-                    paddles[3].position.setTo(game.world.width - 5, game.world.height / 2);
+                    paddles[0].position.setTo(game.world.width / 2, padSize);
+                    paddles[1].position.setTo(padSize, game.world.height / 2);
+                    paddles[2].position.setTo(game.world.width / 2, game.world.height - padSize);
+                    paddles[3].position.setTo(game.world.width - padSize, game.world.height / 2);
                     this.text.text = "GO!";
                 case 3:
                     socket.removeAllListeners('joined');
@@ -282,10 +285,10 @@ function Pong() {
                 ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
             }
 
-            paddles[0].position.setTo(game.world.width / 2, 5);
-            paddles[1].position.setTo(5, game.world.height / 2);
-            paddles[2].position.setTo(game.world.width / 2, game.world.height - 5);
-            paddles[3].position.setTo(game.world.width - 5, game.world.height / 2);
+            paddles[0].position.setTo(game.world.width / 2, padSize);
+            paddles[1].position.setTo(padSize, game.world.height / 2);
+            paddles[2].position.setTo(game.world.width / 2, game.world.height - padSize);
+            paddles[3].position.setTo(game.world.width - padSize, game.world.height / 2);
 
             var scoresPos = [
                 {w: game.world.centerX, h: game.world.centerY - 100},
@@ -383,7 +386,6 @@ function Pong() {
             }
         },
         inputManagement: function () {
-            var moveFactor = 3;
             var p = paddles[currentPlayer];
 
             if (cursors.left.isDown || cursors.up.isDown) {
@@ -394,7 +396,7 @@ function Pong() {
                     break;
                     case 1:
                     case 3:
-                        P.position.y -= moveFactor;
+                        p.position.y -= moveFactor;
                     break;
                 }
             }
