@@ -382,7 +382,7 @@ function Pong() {
             }
         },
         inputManagement: function () {
-            var moveFactor = 2;
+            var moveFactor = 3;
             if (cursors.left.isDown || cursors.up.isDown) {
                 switch (currentPlayer) {
                     case 0:

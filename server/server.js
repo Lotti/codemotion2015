@@ -9,6 +9,7 @@ function server(io) {
     var clientPlayers = {};
     var clients = {};
     var hosts = {};
+    var games = [];
 
     function log(msg, type) {
         if (type == undefined) {
@@ -30,8 +31,17 @@ function server(io) {
         }
     }
 
+    function in_array(search, array) {
+        return array.indexOf(search) >= 0;
+    }
+
     function makeGameId() {
-        return (0|Math.random()*9e6).toString(36);
+        var r;
+        do {
+            r = (0|Math.random()*9e6).toString(36);
+        }
+        while (in_array(r, games));
+        return r;
     }
 
     function roomExists(room) {
@@ -203,6 +213,10 @@ function server(io) {
                 if (hosts[socket.id]) {
                     hosts[socket.id] = false;
                     delete hosts[socket.id];
+
+                    if (games[room] != undefined) {
+                        delete games[room];
+                    }
 
                     log('room destroyed');
                     sendError(6, "host left the game", socket, room);
