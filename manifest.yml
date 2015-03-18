@@ -1,8 +1,8 @@
 applications:
 - disk_quota: 1024M
-  host: codemotion2015
-  name: codemotion2015
-  command: node bin/www
+  host: pong4
+  name: pong4
+  command: node server/main.js
   path: .
   instances: 1
-  memory: 128M
+  memory: 256M
