@@ -1,7 +1,7 @@
 applications:
 - disk_quota: 1024M
   host: pong4
-  name: pong4
+  name: Pong4
   command: node server/main.js
   path: .
   instances: 1
