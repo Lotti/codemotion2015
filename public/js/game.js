@@ -53,8 +53,11 @@ function Pong() {
 
     var colors = ["ff0000", "00ff00", "0000ff", "ffff00"];
 
+    var ballSize = 10;
+    var halfBallSize = ballSize / 2;
     var padSize = 8;
-    var moveFactor = 4;
+    var halfPadSize = padSize / 2;
+    var moveFactor = 5;
 
     function demoMovements(inactivePlayers) {
         if (inactivePlayers == undefined) {
@@ -72,13 +75,13 @@ function Pong() {
             switch (parseInt(i)) {
                 case 0:
                 case 2:
-                    if (ball.body.x <= game.world.width - pW2) {
+                    if (ball.body.x >= pW2 && ball.body.x <= game.world.width - pW2) {
                         p.position.x = ball.position.x;
                     }
                 break;
                 case 1:
                 case 3:
-                    if (ball.body.y <= game.world.height - pH2) {
+                    if (ball.body.y >= pH2 && ball.body.y <= game.world.height - pH2) {
                         p.position.y = ball.position.y;
                     }
                 break;
@@ -114,9 +117,9 @@ function Pong() {
 
             sprites = game.add.group();
 
-            ball = sprites.create(game.world.width / 2, game.world.height / 2, 'pixel');
+            ball = sprites.create(game.world.centerX - halfBallSize, game.world.centerY - halfBallSize, 'pixel');
             ball.name = 'ball';
-            ball.scale.setTo(10, 10);
+            ball.scale.setTo(ballSize, ballSize);
             ball.anchor.setTo(0.5, 0.5);
 
             game.physics.enable([ball], Phaser.Physics.ARCADE);
@@ -129,10 +132,10 @@ function Pong() {
             ball.player = -1;
 
             paddles = [];
-            paddles.push(sprites.create(game.world.width / 2, padSize, 'pixel'));
-            paddles.push(sprites.create(padSize, game.world.height / 2, 'pixel'));
-            paddles.push(sprites.create(game.world.width / 2, game.world.height - padSize, 'pixel'));
-            paddles.push(sprites.create(game.world.width - padSize, game.world.height / 2, 'pixel'));
+            paddles.push(sprites.create(game.world.centerX - halfPadSize, halfPadSize, 'pixel'));
+            paddles.push(sprites.create(halfPadSize, game.world.height / 2 - halfPadSize, 'pixel'));
+            paddles.push(sprites.create(game.world.centerX - halfPadSize, game.world.height - halfPadSize, 'pixel'));
+            paddles.push(sprites.create(game.world.width - halfPadSize, game.world.centerY - halfPadSize, 'pixel'));
 
             paddles[0].tint = 0xff0000;
             paddles[1].tint = 0x00ff00;
@@ -140,6 +143,7 @@ function Pong() {
             paddles[3].tint = 0xffff00;
 
             for (var i in paddles) {
+                paddles[i].op = paddles[i].position;
                 paddles[i].player = i;
                 paddles[i].name = 'Player' + (parseInt(i) + 1);
                 if (i % 2 == 0) {
@@ -236,10 +240,9 @@ function Pong() {
                     ball.body.velocity.x = 0;
                     ball.body.velocity.y = 0;
                 case 2:
-                    paddles[0].position.setTo(game.world.width / 2, padSize);
-                    paddles[1].position.setTo(padSize, game.world.height / 2);
-                    paddles[2].position.setTo(game.world.width / 2, game.world.height - padSize);
-                    paddles[3].position.setTo(game.world.width - padSize, game.world.height / 2);
+                    for (var i in paddles) {
+                        paddles[i].position.setTo(paddles[i].op.x,paddles[i].op.y);
+                    }
                     this.text.text = "GO!";
                 case 3:
                     socket.removeAllListeners('joined');
@@ -285,11 +288,6 @@ function Pong() {
                 ball.body.velocity.y = game.rnd.integerInRange(100, 250) * sign;
             }
 
-            paddles[0].position.setTo(game.world.width / 2, padSize);
-            paddles[1].position.setTo(padSize, game.world.height / 2);
-            paddles[2].position.setTo(game.world.width / 2, game.world.height - padSize);
-            paddles[3].position.setTo(game.world.width - padSize, game.world.height / 2);
-
             var scoresPos = [
                 {w: game.world.centerX, h: game.world.centerY - 100},
                 {w: game.world.centerX - 100, h: game.world.centerY},
@@ -298,6 +296,7 @@ function Pong() {
             ];
 
             for (var i in paddles) {
+                paddles[i].position.setTo(paddles[i].op.x,paddles[i].op.y);
                 var style = {font: "50px Arial", fill: "#" + colors[i], align: "center"};
                 paddles[i].scoreLabel = game.add.text(scoresPos[i].w, scoresPos[i].h, "0", style);
                 paddles[i].scoreLabel.anchor.setTo(0.5, 0.5);
