@@ -510,7 +510,7 @@ function Pong() {
                 ball.position.y = parseFloat(data.ballY);
             }
 
-            if (data.player != currentPlayer) {
+            if (currentPlayer != data.player) {
                 switch(parseInt(data.player)) {
                     case 0:
                     case 2:

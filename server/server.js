@@ -171,7 +171,7 @@ function server(io) {
                             clients[socket.id] = room;
                             var players = socketsInRoom(room);
                             clientPlayers[socket.id] = players.length - 1;
-                            ack({ players: players, playersCount: players.length});
+                            ack({ playersCount: players.length});
                             log('client ' + socket.id + ' connected to room ' + room + ' (' + players.length + '/'+maxPlayers+')');
                             io.to(room).emit('joined', { playersCount: players.length });
                         }
