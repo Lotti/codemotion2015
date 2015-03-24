@@ -5,4 +5,6 @@ Here you can find all the slides and demos showed at my talk during Rome's Codem
 
 http://pong4.eu-gb.mybluemix.net - the example showed during the talk
 
-Watch out for previous talk https://github.com/Lotti/codemotion2014
+Here you can find other talks 
+https://github.com/Lotti/codemotion2014
+http://www.slideshare.net/Lotti86/codemotion-tech-meetup-36452886
