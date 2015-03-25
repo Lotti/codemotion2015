@@ -1,4 +1,13 @@
 function server(io) {
+    var bigScreen = false;
+    if (process.argv.length > 0) {
+        process.argv.forEach(function (val, index, array) {
+            if (val == 'bigScreen') {
+                bigScreen = true;
+            }
+        });
+    }
+
     var debug = false;
     var timeOutDelay = 2500;
     var maxPlayers = 4;
@@ -6,9 +15,14 @@ function server(io) {
         maxPlayers = 2;
     }
 
+    if (bigScreen) {
+        maxPlayers += 1;
+    }
+
     var clientPlayers = {};
     var clients = {};
     var hosts = {};
+    var rooms = {};
     var games = [];
 
     function log(msg, type) {
@@ -144,6 +158,7 @@ function server(io) {
                     clientPlayers[socket.id] = 0;
                     clients[socket.id] = room;
                     hosts[socket.id] = true;
+                    rooms[room] = socket.id;
                     ack(room);
                     log('host '+socket.id+' connected');
                 }
@@ -237,17 +252,35 @@ function server(io) {
         socket.on('gameUpdate', function(data) {
             var room = clients[data.socketId];
             delete data.socketId;
-            io.to(room).emit('clientUpdate', data);
+            if (bigScreen) {
+                room = rooms[room];
+                getSocket(rooms[room]).emit('clientUpdate',data);
+            }
+            else {
+                io.to(room).emit('clientUpdate', data);
+            }
         });
         socket.on('gameScores', function(data) {
             var room = clients[data.socketId];
             delete data.socketId;
-            io.to(room).emit('clientUpdateScores', data);
+            if (bigScreen) {
+                room = rooms[room];
+                getSocket(rooms[room]).emit('clientUpdateScores',data);
+            }
+            else {
+                io.to(room).emit('clientUpdateScores', data);
+            }
         });
         socket.on('gameBall', function(data) {
             var room = clients[data.socketId];
             delete data.socketId;
-            io.to(room).emit('clientUpdateBall', data);
+            if (bigScreen) {
+                room = rooms[room];
+                getSocket(rooms[room]).emit('clientUpdateBall',data);
+            }
+            else {
+                io.to(room).emit('clientUpdateBall', data);
+            }
         });
     });
 }

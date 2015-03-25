@@ -21,7 +21,6 @@ app.set('port', port);
 
 var server = http.createServer(app);
 var io = require('socket.io')(server);
-//var io = require('socket.io').listen(server, { log: false });
 var gameServer = require('./server.js')(io);
 
 

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Pong</title>
+		
+		<link rel="stylesheet" href="css/style.css">
+
+        <script type="text/javascript" src="js/vendors/jquery/jquery-2.1.3.min.js"></script>
+        <script type="text/javascript" src="js/vendors/qrcode/qrcode.min.js"></script>
+        <script type="text/javascript" src="js/vendors/phaser/pixi.min.js"></script>
+        <script type="text/javascript" src="js/vendors/phaser/phaser-no-libs.min.js"></script>
+        <script type="text/javascript" src="js/vendors/phaser/phaser-arcade-physics.min.js"></script>
+        <script type="text/javascript" src="socket.io/socket.io.js"></script>
+    </head>
+    <body>
+        <div id="container">
+            <div id="connect">
+                <table>
+                    <tr id="buttonsContainer" class="hide">
+                        <td><button id="hostGame" class="button">Host game</button><button id="joinGame" class="button">Join game</button></td>
+                    </tr>
+                    <tr id="qrcodeContainer" class="hide">
+                        <td><div id="qrcode"></div> or use game id: <span id="gameId"></span><br />
+                            Waiting for players... (<span id="playersCount">1</span>/4)
+                        </td>
+                    </tr>
+                    <tr id="formContainer" class="hide">
+                        <td><input type="text" id="inputGameId" class="button" value="game id"><button id="joinGameId" class="button">Join this game</button></td>
+                    </tr>
+                    <tr id="endContainer" class="hide">
+                        <td><button id="restartGame" class="button">Play again</button></td>
+                    </tr>
+                </table>
+            </div>
+            <div id="game"></div>
+        </div>
+        <script type="text/javascript" src="js/gameHosted.js"></script>
+        <script type="text/javascript" src="js/form.js"></script>
+    </body>
+</html>
