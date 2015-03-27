@@ -307,7 +307,7 @@ function Pong() {
                 ball.destroy();
                 for(var i in paddles) {
                     if (currentPlayer == i) {
-                        paddles[i].scale.setTo(10, padSize*10);
+                        paddles[i].scale.setTo(3*10, padSize*10);
                         paddles[i].position.setTo(game.world.centerX, game.world.centerY);
                     }
                     else {

@@ -20,7 +20,7 @@ $(function() {
             data.playersCount = parseInt(data.playersCount);
 
             if ($playersCount.length > 0) {
-                $playersCount.text(data.playersCount);
+                $playersCount.text(data.playersCount+"/"+pong.maxPlayers());
             }
             if (data.playersCount == pong.maxPlayers()) {
                 $("#connect").addClass("hide");

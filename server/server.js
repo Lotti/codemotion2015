@@ -268,8 +268,6 @@ function server(io) {
             delete data.socketId;
             if (bigScreen) {
                 var socketId = rooms[room];
-                console.log('room: '+room);
-                console.log('socketId '+socketId);
                 var s = getSocket(socketId);
                 if (s != undefined) {
                     s.emit('clientUpdate', data);
