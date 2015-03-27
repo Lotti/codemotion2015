@@ -38,7 +38,7 @@ function server(io) {
     function makeGameId() {
         var r;
         do {
-            r = (0|Math.random()*9e6).toString(36).substring(0,3);
+            r = (0|Math.random()*9e6).toString(36).substring(0,4);
         }
         while (in_array(r, games));
         return r;
