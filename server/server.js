@@ -186,9 +186,13 @@ function server(io) {
                             clients[socket.id] = room;
                             var players = socketsInRoom(room);
                             clientPlayers[socket.id] = players.length - 1;
-                            ack({ playersCount: players.length});
-                            log('client ' + socket.id + ' connected to room ' + room + ' (' + players.length + '/'+maxPlayers+')');
-                            io.to(room).emit('joined', { playersCount: players.length });
+                            var playersLength = players.length;
+                            if (bigScreen) {
+                                playersLength--;
+                            }
+                            ack({ playersCount: playersLength });
+                            log('client ' + socket.id + ' connected to room ' + room + ' (' + playersLength + '/'+maxPlayers+')');
+                            io.to(room).emit('joined', { playersCount: playersLength });
                         }
                         else {
                             log(err, 'e');
@@ -233,11 +237,15 @@ function server(io) {
                     hosts[socket.id] = false;
                     delete hosts[socket.id];
 
-                    var newSocketId = players[Math.floor(Math.random()*players.length)];
-                    hosts[newSocketId] = true;
+                    if (bigScreen) {
+                        sendError(6, "host left the game", socket, room);
+                    }
+                    else {
+                        var newSocketId = players[Math.floor(Math.random() * players.length)];
+                        hosts[newSocketId] = true;
 
-                    //sendError(6, "host left the game", socket, room);
-                    getSocket(newSocketId).emit('becomeHost');
+                        getSocket(newSocketId).emit('becomeHost');
+                    }
                 }
                 else if (players.length == 1) {
                     sendError(8, "all the other players left the game!", socket, room);
@@ -259,8 +267,13 @@ function server(io) {
             var room = clients[data.socketId];
             delete data.socketId;
             if (bigScreen) {
-                room = rooms[room];
-                getSocket(rooms[room]).emit('clientUpdate',data);
+                var socketId = rooms[room];
+                console.log('room: '+room);
+                console.log('socketId '+socketId);
+                var s = getSocket(socketId);
+                if (s != undefined) {
+                    s.emit('clientUpdate', data);
+                }
             }
             else {
                 io.to(room).emit('clientUpdate', data);
@@ -269,22 +282,14 @@ function server(io) {
         socket.on('gameScores', function(data) {
             var room = clients[data.socketId];
             delete data.socketId;
-            if (bigScreen) {
-                room = rooms[room];
-                getSocket(rooms[room]).emit('clientUpdateScores',data);
-            }
-            else {
+            if (!bigScreen) {
                 io.to(room).emit('clientUpdateScores', data);
             }
         });
         socket.on('gameBall', function(data) {
             var room = clients[data.socketId];
             delete data.socketId;
-            if (bigScreen) {
-                room = rooms[room];
-                getSocket(rooms[room]).emit('clientUpdateBall',data);
-            }
-            else {
+            if (!bigScreen) {
                 io.to(room).emit('clientUpdateBall', data);
             }
         });

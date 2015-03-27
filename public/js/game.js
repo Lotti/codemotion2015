@@ -47,6 +47,7 @@ function Pong() {
     var sprites;
     var ball;
 
+    var maxPlayers = debug ? 2 : 4;
     var currentPlayer = -1;
     var master = false;
     var cursors;
@@ -205,7 +206,7 @@ function Pong() {
         },
         create: function () {
             var style = {font: "30px Arial", fill: "#ffffff", align: "center"};
-            this.text = game.add.text(game.world.centerX, game.world.centerY, "Awaiting other players (" + this.players + "/4)", style);
+            this.text = game.add.text(game.world.centerX, game.world.centerY, "Awaiting other players (" + this.players + "/"+maxPlayers+")", style);
             this.text.anchor.setTo(0.5, 0.5);
         },
         update: function () {
@@ -223,11 +224,11 @@ function Pong() {
             if (this.countdown !== false) {
                 this.text.text = "Ready to start...";
             }
-            else if (host || this.players == 4) {
+            else if (host || this.players == maxPlayers) {
                 this.text.text = "Waiting for sync...";
             }
             else {
-                this.text.text = "Awaiting other players (" + this.players + "/4)";
+                this.text.text = "Awaiting other players (" + this.players + "/"+maxPlayers+")";
             }
         },
         initGame: function(phase) {
@@ -262,7 +263,7 @@ function Pong() {
 
             var self = this;
             currentPlayer = data.player;
-            master = data.player == 0;
+            master = host && data.player == 0;
 
             socket.on('playerLeft', function (data) {
                 self.inactivePlayers[parseInt(data.playerLeft)] = true;
@@ -588,12 +589,19 @@ function Pong() {
         return socket;
     };
 
+    this.getMaxPlayers = function () {
+        return maxPlayers;
+    };
+
     return this;
 }
 
-Pong.prototype.getSocket = function () {
+Pong.prototype.socket = function () {
     return this.getSocket();
 };
 Pong.prototype.sync = function(data) {
     this.switchToSync(data);
+};
+Pong.prototype.maxPlayers = function() {
+    return this.getMaxPlayers();
 };

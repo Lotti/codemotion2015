@@ -1,3 +1,4 @@
+var socket;
 $(function() {
     var hash = false;
     if (window.location.hash.length > 0) {
@@ -5,7 +6,7 @@ $(function() {
     }
 
     var pong = new Pong();
-    var socket = pong.getSocket();
+    socket = pong.socket();
 
     $("#buttonsContainer").removeClass("hide");
 
@@ -21,7 +22,7 @@ $(function() {
             if ($playersCount.length > 0) {
                 $playersCount.text(data.playersCount);
             }
-            if (data.playersCount == 4) {
+            if (data.playersCount == pong.maxPlayers()) {
                 $("#connect").addClass("hide");
                 pong.sync({ hosting: true, playersCount: data.playersCount });
             }
@@ -32,7 +33,7 @@ $(function() {
             if ($playersCount.length > 0) {
                 $playersCount.text(data.playersCount);
             }
-            if (data.playersCount == 4) {
+            if (data.playersCount == pong.maxPlayers()) {
                 $("#connect").addClass("hide");
                 pong.sync({ hosting: true, playersCount: data.playersCount });
             }
