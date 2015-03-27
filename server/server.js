@@ -38,7 +38,7 @@ function server(io) {
     function makeGameId() {
         var r;
         do {
-            r = (0|Math.random()*9e6).toString(36);
+            r = (0|Math.random()*9e6).toString(36).substring(0,3);
         }
         while (in_array(r, games));
         return r;
@@ -209,23 +209,29 @@ function server(io) {
             clients[socket.id] = null;
             delete clients[socket.id];
 
-            if (room != null) {
-                if (hosts[socket.id]) {
+            var players = socketsInRoom(room);
+
+            if (room != null && players.length > 0) {
+                io.to(room).emit('playerLeft', { playerLeft: p, playersCount: players.length });
+
+                if (hosts[socket.id] && players.length > 1) {
                     hosts[socket.id] = false;
                     delete hosts[socket.id];
 
-                    if (games[room] != undefined) {
-                        delete games[room];
-                    }
+                    var newSocketId = players[Math.floor(Math.random()*players.length)];
+                    hosts[newSocketId] = true;
 
-                    log('room destroyed');
-                    sendError(6, "host left the game", socket, room);
+                    //sendError(6, "host left the game", socket, room);
+                    getSocket(newSocketId).emit('becomeHost');
                 }
-                else {
-                    var players = socketsInRoom(room);
-                    if (players.length > 0) {
-                        io.to(room).emit('playerLeft', { playerLeft: p, playersCount: players.length });
-                    }
+                else if (players.length == 1) {
+                    sendError(8, "all the other players left the game!", socket, room);
+                }
+            }
+            else {
+                log('room destroyed');
+                if (games[room] != undefined) {
+                    delete games[room];
                 }
             }
         });
