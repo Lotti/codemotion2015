@@ -509,8 +509,8 @@ function Pong() {
 
             if (master) {
                 data['ball'] = true;
-                data['ballX'] = parseFloat(ball.body.x).toFixed(2);
-                data['ballY'] = parseFloat(ball.body.y).toFixed(2);
+                data['ballX'] = parseFloat(ball.position.x).toFixed(2);
+                data['ballY'] = parseFloat(ball.position.y).toFixed(2);
                 data['ballSpeedX'] = parseFloat(ball.body.velocity.x).toFixed(2);
                 data['ballSpeedY'] = parseFloat(ball.body.velocity.y).toFixed(2);
             }
