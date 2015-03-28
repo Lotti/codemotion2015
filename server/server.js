@@ -160,10 +160,10 @@ function server(io) {
             if (roomExists(room)) {
                 var c = socketsInRoom(room).length;
                 if (c < 1) {
-                    sendError(4, "that room doesn't exists", socket, room);
+                    sendError(4, "that room doesn't exists", socket);
                 }
                 else if (c >= maxPlayers) {
-                    sendError(5, "the room is full!", socket, room);
+                    sendError(5, "the room is full!", socket);
                 }
                 else {
                     socket.join(room, function (err) {
