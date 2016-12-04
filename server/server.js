@@ -1,3 +1,7 @@
+var err = require('debug')('pong:server:error');
+var warn = require('debug')('pong:server:warning');
+var log = require('debug')('pong:server:log');
+
 function server(io) {
     var debug = false;
     var timeOutDelay = 2500;
@@ -10,26 +14,6 @@ function server(io) {
     var clients = {};
     var hosts = {};
     var games = [];
-
-    function log(msg, type) {
-        if (type == undefined) {
-            type = 'l';
-        }
-
-        if (type == 'e') {
-            console.error(msg);
-        }
-        else if (type == 'w') {
-            if (debug) {
-                console.warn(msg);
-            }
-        }
-        else {
-            if (debug) {
-                console.log(msg);
-            }
-        }
-    }
 
     function in_array(search, array) {
         return array.indexOf(search) >= 0;
@@ -58,24 +42,24 @@ function server(io) {
 
     function socketsInRoom(room) {
         if (io == undefined) {
-            log("io is undefined :\\",'e');
+            err('io is undefined :\\');
         }
 
         if (io.nsps["/"] == undefined) {
-            log("/ namespace is undefined :\\",'e');
+            err('/ namespace is undefined :\\');
         }
 
         if (io.nsps["/"].adapter == undefined) {
-            log("adapter is undefined :\\",'e');
+            err('adapter is undefined :\\');
         }
 
         if (io.nsps["/"].adapter.rooms == undefined) {
-            log("rooms is undefined :\\",'e');
+            err('rooms is undefined :\\');
         }
 
         var r = getRoom(room);
         if (typeof r === 'object') {
-            return Object.keys(r);
+            return Object.keys(r.sockets);
         }
         else {
             return [];
@@ -90,7 +74,7 @@ function server(io) {
             socket.emit('errorMsg', {num: number, msg: msg});
         }
         catch(ex) {
-            log(ex,'e');
+            err(ex);
         }
     }
 
@@ -123,7 +107,7 @@ function server(io) {
                 });
             }
             else {
-                log('socket not found :\\ '+sid,'e');
+                err('socket not found :\\ '+sid);
             }
         }
     }
@@ -132,8 +116,7 @@ function server(io) {
         clients[socket.id] = null;
 
         socket.on('error', function(data) {
-            log('onError','e');
-            log(data,'e');
+            err('onError', data);
         });
 
         socket.on('host', function(data, ack) {
@@ -148,7 +131,7 @@ function server(io) {
                     log('host '+socket.id+' connected');
                 }
                 else {
-                    log(err,'e');
+                    err(err);
                     sendError(1, "host: can't join room", socket);
                 }
             });
@@ -176,7 +159,7 @@ function server(io) {
                             io.to(room).emit('joined', { playersCount: players.length });
                         }
                         else {
-                            log(err, 'e');
+                            err(err);
                             sendError(3, "client: can't join room", socket);
                         }
                     });
@@ -229,7 +212,7 @@ function server(io) {
                 }
             }
             else {
-                log('room destroyed');
+                log('room ' + room + ' destroyed');
                 if (games[room] != undefined) {
                     delete games[room];
                 }

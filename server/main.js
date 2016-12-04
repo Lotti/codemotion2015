@@ -5,7 +5,7 @@
  */
 
 var app = require('./app.js');
-var debug = require('debug')('myApp:server');
+var debug = require('debug')('pong:main');
 var http = require('http');
 
 /**

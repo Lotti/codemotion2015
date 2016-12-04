@@ -1,5 +1,22 @@
 {
+	"ignore": [
+		".git",
+		"node_modules",
+		"node_modules/**/node_modules",
+		"public",
+		"slides"
+	],
 	"verbose": true,
-	"ignore": [".git"],
-	"watch": ["server/","public/"]
+	"execMap": {
+		"js": "node"
+	},
+	"watch": [
+		"server/"
+	],
+	"env": {
+		"NODE_ENV": "development",
+		"PORT": 3000,
+		"DEBUG": "pong:*"
+	},
+	"ext": "js json yml"
 }
